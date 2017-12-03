@@ -14,6 +14,8 @@ Pytorch implementation of [Sample-level Deep Convolutional Neural Networks for M
 9 : 9 hidden conv layers
 
 ### Steps
+In case of reproduction, need to download data and also set paths as well!
+
 * Data processing
 ```
     python process_audio.py

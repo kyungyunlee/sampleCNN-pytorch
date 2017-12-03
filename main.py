@@ -51,7 +51,7 @@ def main() :
     print ("Finished loading data!")
    
     # load model
-    print ("Load samplCNN model")
+    print ("Load sampleCNN model")
     sampleCNN_model = model.SampleCNN(DROPOUT_RATE, BATCH_SIZE)
 
     if args.cuda:

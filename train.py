@@ -19,7 +19,7 @@ def train(model, train_loader, val_loader, criterion, learning_rate, num_epochs,
             audio = data['audio']
             label = data['label']
             # have to convert to an autograd.Variable type in order to keep track of the gradient...
-            audio = Variable(audio, requires_grad=True)
+            audio = Variable(audio)
             label = Variable(label)
 
             if args.cuda:
@@ -42,8 +42,9 @@ def train(model, train_loader, val_loader, criterion, learning_rate, num_epochs,
             # cross validation
             if (i+1) % test_interval == 0:
                 print ('Evaluating...')
-                eval_loss = eval(model, val_loader, criterion, args)
-                scheduler.step(eval_loss) # use the learning rate scheduler!
+                one_batch_val = next(iter(val_loader))
+                eval_loss = eval(model, one_batch_val, criterion, args)
+                scheduler.step(eval_loss) # use the learning rate scheduler
 
             if (i+1) % save_interval == 0:
                 if not os.path.isdir(save_dir): os.makedirs(save_dir)

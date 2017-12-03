@@ -7,31 +7,28 @@ from sklearn.metrics import roc_auc_score, average_precision_score
 
 # Validate the network on the val_loader (during training) or test_loader (for checking result)
 # During training use this function for validation data.
-def eval(model, some_loader, criterion, args):
+def eval(model, val_loader, criterion, args):
     model.eval() # eval mode
-    eval_loss = 0
-    for i, data in enumerate(some_loader):
-        audio = data['audio']
-        label = data['label']
-        audio = Variable(audio)
-        label = Variable(label)
 
-        if args.cuda:
-            audio = audio.cuda()
-            label = label.cuda()
+    audio = val_loader['audio']
+    label = val_loader['label']
+    audio = Variable(audio)
+    label = Variable(label)
 
-        outputs = model(audio)
-        loss = criterion(outputs, label)
+    if args.cuda:
+        audio = audio.cuda()
+        label = label.cuda()
 
-        eval_loss += loss.data[0]
+    outputs = model(audio)
+    loss = criterion(outputs, label)
 
-        if i+1 == len(some_loader):
-            auc, aprec = aroc_ap(label.data.numpy(), outputs.data.numpy())
-            print 'AROC = %.3f (%.3f)' % (np.mean(auc), np.std(auc) / np.sqrt(len(auc)))
-            print 'AP = %.3f (%.3f)' % (np.mean(aprec), np.std(aprec) / np.sqrt(len(aprec)))
+    eval_loss = loss.data[0]
 
-    eval_loss /= len(some_loader)
-    print ('\nTotal Eval result : Average loss: {:.4f}, size of eval data : {} \n'. format(eval_loss, len(some_loader)))
+    auc, aprec = aroc_ap(label.data.numpy(), outputs.data.numpy())
+    print '\nAROC = %.3f (%.3f)' % (np.mean(auc), np.std(auc) / np.sqrt(len(auc)))
+    print 'AP = %.3f (%.3f)' % (np.mean(aprec), np.std(aprec) / np.sqrt(len(aprec)))
+
+    print ('Average loss: {:.4f} \n'. format(eval_loss))
     return eval_loss
 
 
