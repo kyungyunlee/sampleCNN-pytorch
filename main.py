@@ -4,71 +4,64 @@ import torch.nn as nn
 import argparse
 import model
 import train
-import evaluate
-from data.data_loader import SampleLevelMTTDataset
-
+from data_loader import SampleLevelMTTDataset
 
 # HyperParameters
 #SAMPLE_SIZE = 59049
 #SAMPLE_RATE = 22050
-BATCH_SIZE = 23
-LEARNING_RATE = 0.01
-DROPOUT_RATE = 0.5
-NUM_EPOCHS = 100
-TEST_INTERVAL = 1000
-SAVE_INTERVAL = 500
+batch_size = 32
+learning_rate = 0.008
+dropout_rate = 0.5
+num_epochs = 100
 
 # Paths
 # for accessing original data
-RAW_AUDIO_DATA_PATH = 'path_to_raw_audio_data/'
-ORIGINAL_ANNOTATION_PATH = 'path_to_annotation_file/'
-# for saving newly processed data
-NPY_AUDIO_DATA_PATH = 'path_to_saving_npy_files/'
-NEW_ANNOTATION_PATH = 'path_to_saving_new_annotation_files/'
-# for saving mdel
-SAVE_MODEL_DIR = 'path_to_saving_models/'
+data_dir = '/media/bach4/dataset/'
+audio_dir = data_dir + 'pubMagnatagatune_mp3s_to_npy/' 
+my_dir = '/media/bach4/kylee/sampleCNN-data/' # annotation files saved here
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--disable-cuda', action='store_true', help='DISABLE CUDA')
+parser.add_argument('--device_num', type=int, help='WHICH GPU')
 args = parser.parse_args()
-args.cuda = not args.disable_cuda and torch.cuda.is_available()
+print (args)
+args.cuda = torch.cuda.is_available()
 
 
 def main() :
     # load data
-    train_annotation_path = NEW_ANNOTATION_PATH + 'annotations_final_train.csv'
-    val_annotation_path = NEW_ANNOTATION_PATH + 'annotations_final_val.csv'
-    test_annotation_path = NEW_ANNOTATION_PATH + 'annotations_final_test.csv'
+    train_annotation = my_dir + 'train_50_tags_annotations_final.csv'
+    val_annotation = my_dir + 'valid_50_tags_annotations_final.csv'
+    test_annotation = my_dir + 'test_50_tags_annotations_final.csv'
     
     print ("Start loading data...")
-    train_data = SampleLevelMTTDataset(train_annotation_path, NPY_AUDIO_DATA_PATH)
-    val_data = SampleLevelMTTDataset(val_annotation_path, NPY_AUDIO_DATA_PATH)
-    test_data = SampleLevelMTTDataset(test_annotation_path, NPY_AUDIO_DATA_PATH)
+    train_data = SampleLevelMTTDataset(train_annotation, audio_dir)
+    val_data = SampleLevelMTTDataset(val_annotation, audio_dir)
+    test_data = SampleLevelMTTDataset(test_annotation, audio_dir)
 
-    train_loader = DataLoader(train_data, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
-    val_loader = DataLoader(val_data, batch_size=BATCH_SIZE, shuffle=True, drop_last = True)
-    test_loader = DataLoader(test_data, batch_size=BATCH_SIZE, shuffle=True, drop_last=True)
+    train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=True)
+    val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True, drop_last = True)
+    test_loader = DataLoader(test_data, batch_size=batch_size, shuffle=True, drop_last=True)
     print ("Finished loading data!")
    
     # load model
     print ("Load sampleCNN model")
-    sampleCNN_model = model.SampleCNN(DROPOUT_RATE, BATCH_SIZE)
+    sampleCNN_model = model.SampleCNN(dropout_rate)
 
     if args.cuda:
-        sampleCNN_model.cuda()
-
+        sampleCNN_model.cuda(args.device_num)
 
     # start training
     print ("Start training!!")
-    #criterion = nn.BCELoss()
+    # criterion = nn.BCELoss()
     criterion = nn.BCEWithLogitsLoss() # don't use sigmoid layer at the end when using this
-    train.train(sampleCNN_model, train_loader, val_loader, criterion, LEARNING_RATE, NUM_EPOCHS, TEST_INTERVAL, SAVE_INTERVAL, SAVE_MODEL_DIR, args)
+    train.train(sampleCNN_model, train_loader, val_loader, criterion, learning_rate, num_epochs,args)
     
     print ("Finished! Hopefully..")
 
     # test it
     print ("Start testing...")
-    evaluate.eval(sampleCNN_model, test_loader, criterion, args)
+    train.eval(sampleCNN_model, test_loader, criterion, args)
+
 
 
 if __name__ == '__main__':

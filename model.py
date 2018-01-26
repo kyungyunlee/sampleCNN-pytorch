@@ -3,11 +3,8 @@ import torch.nn as nn
 
 
 class SampleCNN(nn.Module):
-    def __init__(self, dropout_rate, batch_size):
+    def __init__(self, dropout_rate):
         super(SampleCNN, self).__init__()
-
-        self.dropout_rate= dropout_rate
-        self.batch_size = batch_size
 
         # 59049 x 1
         self.conv1 = nn.Sequential(
@@ -43,7 +40,8 @@ class SampleCNN(nn.Module):
             nn.Conv1d(256, 256, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(256),
             nn.ReLU(),
-            nn.MaxPool1d(3,stride=3))
+            nn.MaxPool1d(3,stride=3),
+            nn.Dropout(dropout_rate))
         # 81 x 256
         self.conv7 = nn.Sequential(
             nn.Conv1d(256, 256, kernel_size=3, stride=1, padding=1),
@@ -72,9 +70,9 @@ class SampleCNN(nn.Module):
         self.conv11 = nn.Sequential(
             nn.Conv1d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(512),
-            nn.ReLU())
+            nn.ReLU(),
+            nn.Dropout(dropout_rate))
         # 1 x 512 
-        self.dropout = nn.Dropout(dropout_rate)
         self.fc = nn.Linear(512, 50)
         self.activation = nn.Sigmoid()
     
@@ -82,7 +80,7 @@ class SampleCNN(nn.Module):
         # input x : 23 x 59049 x 1
         # expected conv1d input : minibatch_size x num_channel x width
 
-        x = x.view(self.batch_size, 1,-1)
+        x = x.view(x.shape[0], 1,-1)
         # x : 23 x 1 x 59049
 
         out = self.conv1(x)
@@ -97,11 +95,10 @@ class SampleCNN(nn.Module):
         out = self.conv10(out)
         out = self.conv11(out) 
         
-        out = self.dropout(out)
-
-        out = out.view(self.batch_size, out.size(1) * out.size(2))
+        out = out.view(x.shape[0], out.size(1) * out.size(2))
         logit = self.fc(out)
 
-        #logit = self.activation(out)
+        #logit = self.activation(logit)
 
         return logit
+    

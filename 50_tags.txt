@@ -1,0 +1,50 @@
+no beat
+folk
+trance
+foreign
+orchestra
+baroque
+chant
+hard
+no piano
+modern
+bass
+eastern
+country
+jazz
+cello
+heavy
+harp
+weird
+dance
+new age
+choir
+solo
+sitar
+soft
+pop
+flute
+quiet
+loud
+harpsichord
+opera
+singer
+indian
+synth
+violin
+ambient
+piano
+female
+beat
+male
+fast
+rock
+no vocal
+drum
+electronic
+vocal
+string
+techno
+slow
+classic
+guitar
