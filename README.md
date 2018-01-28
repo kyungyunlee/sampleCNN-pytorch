@@ -3,7 +3,6 @@ Pytorch implementation of [Sample-level Deep Convolutional Neural Networks for M
 
 ### Data
 [MagnaTagATune Dataset](http://mirg.city.ac.uk/codeapps/the-magnatagatune-dataset)
-
 * Used tag annotations and audio data
 
 ### Model

@@ -64,7 +64,8 @@ def reduce_to_N_tags(filename, base_dir, n_tops=50, merge=True):
         df = _merge_redundant_tags(filename)
     else :
         df = pd.read_csv(filename, delimiter='\t')
-    topN = df.drop(['clip_id', 'mp3_path'], axis=1).sum().sort_values().tail(n_tops).index.tolist()
+    print (df.drop(['clip_id', 'mp3_path'], axis=1).sum(axis=0).sort_values())
+    topN = df.drop(['clip_id', 'mp3_path'], axis=1).sum(axis=0).sort_values().tail(n_tops).index.tolist()[::-1]
     print (len(topN), topN)
     taglist_f = open(str(n_tops) + '_tags.txt', 'w')
     for tag in topN:

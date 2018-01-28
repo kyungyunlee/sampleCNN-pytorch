@@ -11,12 +11,13 @@ def train(model, train_loader, val_loader, criterion, learning_rate, num_epochs,
     # Define an optimizer (loss function is defined in main.py)
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate, weight_decay=1e-6, momentum=0.9, nesterov=True)
     # optimizer = torch.optim.Adam(model.parameters(), lr=learning_rate, weight_decay=1e-6)
-    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.5, patience=2, verbose=True)
+    scheduler = lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', factor=0.2, patience=2, verbose=True)
     
     # Train the network
     writer = SummaryWriter()
-    epoch_loss = 0.0
     for epoch in range(num_epochs):
+        avg_auc = []
+        avg_ap = []
         model.train() # training mode
         for i, data in enumerate(train_loader):
             audio = data['audio']
@@ -35,25 +36,30 @@ def train(model, train_loader, val_loader, criterion, learning_rate, num_epochs,
             loss.backward()
             optimizer.step()
 
-            epoch_loss += loss.data[0]
-
             if (i+1) % 10 == 0:
                 print ("Epoch [%d/%d], Iter [%d/%d] loss : %.4f" % (epoch+1, num_epochs, i+1, len(train_loader), loss.data[0]))
 
                 writer.add_scalar('train/loss', loss.data[0], (epoch+1)*len(train_loader)+ i+1)
                 
                 auc, aprec = aroc_ap(label.data.cpu().numpy(), outputs.data.cpu().numpy())
+                avg_auc.append(np.mean(auc))
+                avg_ap.append(np.mean(aprec))
                 # auc2 = aroc_ap2(label.data.cpu().numpy(), outputs.data.cpu().numpy())
                 print ('AROC = %.3f (%.3f)' % (np.mean(auc), np.std(auc) / np.sqrt(len(auc))))
                 print ('AP = %.3f (%.3f)' % (np.mean(aprec), np.std(aprec) / np.sqrt(len(aprec))))
                 # print ('AROC = %.3f (%.3f)' % (np.mean(auc2), np.std(auc2) / np.sqrt(len(auc2))))
                 #print 'AP = %.3f (%.3f)' % (np.mean(aprec), np.std(aprec) / np.sqrt(len(aprec)))
-                
+        
+        print ("Average AROC = %.3f, AP = %.3f"%(np.mean(avg_auc), np.mean(avg_ap)))
         print ('Evaluating...')
         eval_loss = eval(model, val_loader, criterion, args)
             
         scheduler.step(eval_loss) # use the learning rate scheduler
-        print ('Learning rate : {}'.format(optimizer.param_groups[0]['lr']))
+        curr_lr = optimizer.param_groups[0]['lr']
+        print ('Learning rate : {}'.format(curr_lr))
+        if curr_lr < 1e-7:
+            print ("Early stopping")
+            break
 
     torch.save(model.state_dict(), model.__class__.__name__ + '.pth')
     writer.close()

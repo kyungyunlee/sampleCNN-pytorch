@@ -112,7 +112,7 @@ if __name__ =='__main__':
     model = load_model(model_path, saved_state, samplecnn_model, args)
     
     # Predict top 5 tags
-    audio_files = ['MuraMasa-LoveSick.mp3', 'SignoftheTimes.mp3']
+    audio_files = ['zenzenzense.mp3', 'MuraMasa-WhatIfIdo.mp3']
     predict_topN_tags(model, base_dir,audio_files, sample_rate, n_samples, tagfile, args)
     
 
