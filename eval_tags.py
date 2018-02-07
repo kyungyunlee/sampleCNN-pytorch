@@ -106,13 +106,13 @@ if __name__ =='__main__':
     base_dir = '/media/bach4/kylee/sampleCNN-data/'
     sample_rate= 22050
     n_samples = 59049
-    saved_state = 'SampleCNN.pth'
+    saved_state = 'SampleCNN-singletag.pth'
     tagfile = '50_tags.txt'
     samplecnn_model = SampleCNN(0)
     model = load_model(model_path, saved_state, samplecnn_model, args)
     
     # Predict top 5 tags
-    audio_files = ['zenzenzense.mp3', 'MuraMasa-WhatIfIdo.mp3']
+    audio_files = ['zenzenzense.mp3', 'MuraMasa-WhatIfIGo.mp3']
     predict_topN_tags(model, base_dir,audio_files, sample_rate, n_samples, tagfile, args)
     
 

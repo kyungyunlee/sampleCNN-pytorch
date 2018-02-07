@@ -13,6 +13,7 @@ batch_size = 32
 learning_rate = 0.008
 dropout_rate = 0.5
 num_epochs = 100
+num_tags = 50
 
 # Paths
 # for accessing original data
@@ -33,10 +34,11 @@ def main() :
     val_annotation = my_dir + 'valid_50_tags_annotations_final.csv'
     test_annotation = my_dir + 'test_50_tags_annotations_final.csv'
     
+    tagfile = '50_tags.txt'
     print ("Start loading data...")
-    train_data = SampleLevelMTTDataset(train_annotation, audio_dir)
-    val_data = SampleLevelMTTDataset(val_annotation, audio_dir)
-    test_data = SampleLevelMTTDataset(test_annotation, audio_dir)
+    train_data = SampleLevelMTTDataset(train_annotation, audio_dir, tagfile, num_tags)
+    val_data = SampleLevelMTTDataset(val_annotation, audio_dir, tagfile, num_tags)
+    test_data = SampleLevelMTTDataset(test_annotation, audio_dir, tagfile, num_tags)
 
     train_loader = DataLoader(train_data, batch_size=batch_size, shuffle=True, drop_last=True)
     val_loader = DataLoader(val_data, batch_size=batch_size, shuffle=True, drop_last = True)

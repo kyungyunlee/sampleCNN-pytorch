@@ -20,6 +20,8 @@ Pytorch implementation of [Sample-level Deep Convolutional Neural Networks for M
 	* predict tags for given songs
     * ` python evaluate.py --device_num 0 `
 
+### Tag prediction
+* 
 
 ### References
 * [https://github.com/jongpillee/sampleCNN](https://github.com/jongpillee/sampleCNN)

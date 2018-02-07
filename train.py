@@ -16,8 +16,10 @@ def train(model, train_loader, val_loader, criterion, learning_rate, num_epochs,
     # Train the network
     writer = SummaryWriter()
     for epoch in range(num_epochs):
-        avg_auc = []
-        avg_ap = []
+        avg_auc1 = []
+        avg_ap1 = []
+        avg_auc2 = []
+        avg_ap2 = []
         model.train() # training mode
         for i, data in enumerate(train_loader):
             audio = data['audio']
@@ -41,16 +43,22 @@ def train(model, train_loader, val_loader, criterion, learning_rate, num_epochs,
 
                 writer.add_scalar('train/loss', loss.data[0], (epoch+1)*len(train_loader)+ i+1)
                 
-                auc, aprec = aroc_ap(label.data.cpu().numpy(), outputs.data.cpu().numpy())
-                avg_auc.append(np.mean(auc))
-                avg_ap.append(np.mean(aprec))
-                # auc2 = aroc_ap2(label.data.cpu().numpy(), outputs.data.cpu().numpy())
-                print ('AROC = %.3f (%.3f)' % (np.mean(auc), np.std(auc) / np.sqrt(len(auc))))
-                print ('AP = %.3f (%.3f)' % (np.mean(aprec), np.std(aprec) / np.sqrt(len(aprec))))
-                # print ('AROC = %.3f (%.3f)' % (np.mean(auc2), np.std(auc2) / np.sqrt(len(auc2))))
-                #print 'AP = %.3f (%.3f)' % (np.mean(aprec), np.std(aprec) / np.sqrt(len(aprec)))
+                # retrieval 
+                auc1, aprec1 = aroc_ap(label.data.cpu().numpy(), outputs.data.cpu().numpy())
+                avg_auc1.append(np.mean(auc1))
+                avg_ap1.append(np.mean(aprec1))
+                # annotation
+                auc2, aprec2 = aroc_ap2(label.data.cpu().numpy(), outputs.data.cpu().numpy())
+                avg_auc2.append(np.mean(auc2))
+                avg_ap2.append(np.mean(aprec2))
+
+                print ('Retrieval : AROC = %.3f (%.3f)' % (np.mean(auc1), np.std(auc1) / np.sqrt(len(auc1))))
+                print ('Retrieval : AP = %.3f (%.3f)' % (np.mean(aprec1), np.std(aprec1) / np.sqrt(len(aprec1))))
+                print ('Annotation : AROC = %.3f (%.3f)' % (np.mean(auc2), np.std(auc2) / np.sqrt(len(auc2))))
+                print ('Annotation : AP = %.3f (%.3f)' % (np.mean(aprec2), np.std(aprec2) / np.sqrt(len(aprec2))))
         
-        print ("Average AROC = %.3f, AP = %.3f"%(np.mean(avg_auc), np.mean(avg_ap)))
+        print ("Retrieval : Average AROC = %.3f, AP = %.3f"%(np.mean(avg_auc1), np.mean(avg_ap1)))
+        print ("Annotation :Average AROC = %.3f, AP = %.3f"%(np.mean(avg_auc2), np.mean(avg_ap2)))
         print ('Evaluating...')
         eval_loss = eval(model, val_loader, criterion, args)
             
@@ -71,6 +79,10 @@ def eval(model, val_loader, criterion, args):
     model.eval() # eval mode
     
     eval_loss = 0.0
+    avg_auc1 = []
+    avg_ap1 = []
+    avg_auc2 = []
+    avg_ap2 = []
     for i, data in enumerate(val_loader):
         audio = data['audio']
         label = data['label']
@@ -83,14 +95,23 @@ def eval(model, val_loader, criterion, args):
 
         outputs = model(audio)
         loss = criterion(outputs, label)
+        
+        auc1, aprec1 = aroc_ap(label.data.cpu().numpy(), outputs.data.cpu().numpy())
+        avg_auc1.append(np.mean(auc1))
+        avg_ap1.append(np.mean(aprec1))
+        auc2, aprec2 = aroc_ap2(label.data.cpu().numpy(), outputs.data.cpu().numpy())
+        avg_auc2.append(np.mean(auc2))
+        avg_ap2.append(np.mean(aprec2))
 
         eval_loss += loss.data[0]
 
     avg_loss =eval_loss/len(val_loader)
+    print ("Retrieval : Average AROC = %.3f, AP = %.3f"%(np.mean(avg_auc1), np.mean(avg_ap1)))
+    print ("Annotation : Average AROC = %.3f, AP = %.3f"%(np.mean(avg_auc2), np.mean(avg_ap2)))
     print ('Average loss: {:.4f} \n'. format(avg_loss))
     return avg_loss
 
-''' Tag wise calculation '''
+''' Retrieval : Tag wise calculation '''
 def aroc_ap(tags_true_binary, tags_predicted):
     n_tags = tags_true_binary.shape[1]
     auc = list()
@@ -103,22 +124,19 @@ def aroc_ap(tags_true_binary, tags_predicted):
 
     return auc, aprec
 
-''' Row wise (item wise) calculation '''
-'''
+''' Annotation : Item wise(row wise) calculation '''
 def aroc_ap2(tags_true_binary, tags_predicted):
     n_songs = tags_true_binary.shape[0]
     auc = list()
-    #aprec = list()
+    aprec = list()
 
     for i in range(n_songs):
         if np.sum(tags_true_binary[i]) != 0:
             auc.append(roc_auc_score(tags_true_binary[i], tags_predicted[i]))
-            #aprec.append(average_precision_score(tags_true_binary[:, i], tags_predicted[:, i]))
+            aprec.append(average_precision_score(tags_true_binary[i], tags_predicted[i]))
 
-    #return auc, aprec
-    return auc
-'''
+    return auc, aprec
 
 if __name__ == '__main__':
     model = SampleCNN()
-    model = model.load_state_dict(torch.load('SampleCNN.pt'))
+    model = model.load_state_dict(torch.load('SampleCNN.pth'))
