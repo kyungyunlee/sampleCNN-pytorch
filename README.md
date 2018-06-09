@@ -12,16 +12,17 @@ Pytorch implementation of [Sample-level Deep Convolutional Neural Networks for M
 
 ### Procedures
 * Data processing
-    * ` python process_annotations.py `
-* Training with cuda
+    * audio (to read audio signal from mp3s and save as npy) : ` python process_audio.py `
+    * annotation (process redundant tags and select top N=50 tags): ` python process_annotations.py `
+		* this will create and save train/valid/test annotation files 
+* Training
     * ` python main.py --device_num 0 `
-	* view loss with ` tensorboard --logdir runs`
-* Testing with cuda
+* Testing 
 	* predict tags for given songs
     * ` python evaluate.py --device_num 0 `
 
 ### Tag prediction
-* 
+* `python eval_tags.py --device_num 0 --mp3_file "path/to/mp3file/to/predict.mp3" ` 
 
 ### References
 * [https://github.com/jongpillee/sampleCNN](https://github.com/jongpillee/sampleCNN)

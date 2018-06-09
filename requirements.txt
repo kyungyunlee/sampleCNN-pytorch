@@ -1,6 +1,5 @@
-pandas==0.20.3
-torch==0.3.0
 librosa==0.5.1
-numpy==1.13.3
+numpy==1.14.0
+pandas==0.23.0
+torch==0.4.0
 scikit_learn==0.19.1
-tensorboardX==1.0

@@ -1,7 +1,7 @@
 import torch
 import pandas as pd
 from torch.utils.data import Dataset
-import process_audio
+from process_audio import get_segment_from_npy 
 import numpy as np
 
 import warnings
@@ -33,7 +33,7 @@ class SampleLevelMTTDataset(Dataset):
         
         mp3filename = self.annotations_frame.iloc[idx]['mp3_path'].split('.')[0]+'.npy'
         try :
-            segment = process_audio.get_segment_from_npy(self.audio_dir + mp3filename, segment_idx)
+            segment = get_segment_from_npy(self.audio_dir + mp3filename, segment_idx)
         except :
             new_index = index-1 if index > 0 else index +1
             return self.__getitem__(new_index)

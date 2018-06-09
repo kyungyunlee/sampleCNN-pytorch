@@ -1,19 +1,18 @@
+''' Functions for processing the MTT annotation by selecting top N tags and dividing the dataset into train/valid/test set '''
+
 import os
 import pandas as pd
 import numpy as np
+from config import * 
 np.random.seed(0)
 
-'''
-Go through the annotation_final.csv, process labels for the audio data
-'''
-# testing
-annotation_path = 'path_to_annotation_file/annotations_final.csv'
-
-'''
-Some tags are considered to be redundant, so it seems reasonable to do some cleanup.
-Tag organization by https://github.com/keunwoochoi/magnatagatune-list
-'''
 def _merge_redundant_tags(filename):
+    ''' Some tags are considered to be redundant, so it seems reasonable to do some cleanup. Tag organization by https://github.com/keunwoochoi/magnatagatune-list
+    Args : 
+        filename : path to the MTT annotation csv file 
+    Return :
+        new_df : pandas dataframe with merged tags 
+    '''
     synonyms = [['beat', 'beats'],
                 ['chant', 'chanting'],
                 ['choir', 'choral'],
@@ -58,8 +57,16 @@ def _merge_redundant_tags(filename):
             new_df.drop(synonyms_redundant[i][j] ,1, inplace=True)
     return new_df 
 
-''' There are a lot of tags, so reduce it to top N popular tags '''
-def reduce_to_N_tags(filename, base_dir, n_tops=50, merge=True):
+def reduce_to_N_tags(filename, base_dir, n_tops=NUM_TAGS, merge=True):
+    ''' There are a lot of tags, so reduce it to top N popular tags
+    Args : 
+        filename : path to MTT annotation csv file 
+        base_dir : path to general project directory 
+        n_tops : number of tags to reduce to 
+        merge : combine similar tags, like female vocal & female vocals & women  
+    Return : 
+        new_filename : path to the new processed csv file with reduced tags 
+    '''
     if merge:
         df = _merge_redundant_tags(filename)
     else :
@@ -83,8 +90,15 @@ def reduce_to_N_tags(filename, base_dir, n_tops=50, merge=True):
     df.to_csv(new_filename, sep='\t', encoding='utf-8', index=False)
     return new_filename
 
-''' Split into train/val/test '''
 def split_data(filename, base_dir, ratio=0.2):
+    ''' Split into train/val/test and saves each set to a new file  
+    Args: 
+        filename : path to the MTT annotation csv file 
+        base_dir : path to the general project directory 
+    Return : 
+        None
+    '''
+
     df = pd.read_csv(filename, delimiter='\t')
     data_len = df.shape[0]
     print ("Data shape {}".format(df.shape))
@@ -108,9 +122,6 @@ def split_data(filename, base_dir, ratio=0.2):
 
 
 if __name__ == "__main__":
-    base_dir = '/media/bach4/kylee/sampleCNN-data/'
-    data_dir = '/media/bach4/dataset/'
-    annot_file = 'annotations_final.csv'
-    new_csvfile = reduce_to_N_tags(data_dir + annot_file, base_dir)
+    new_csvfile = reduce_to_N_tags(ANNOT_FILE, BASE_DIR)
     split_data(new_csvfile, base_dir)
 
