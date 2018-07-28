@@ -3,7 +3,7 @@
 import os
 import pandas as pd
 import numpy as np
-from config import * 
+import config 
 np.random.seed(0)
 
 def _merge_redundant_tags(filename):
@@ -57,7 +57,7 @@ def _merge_redundant_tags(filename):
             new_df.drop(synonyms_redundant[i][j] ,1, inplace=True)
     return new_df 
 
-def reduce_to_N_tags(filename, base_dir, n_tops=NUM_TAGS, merge=True):
+def reduce_to_N_tags(filename, base_dir, n_tops=config.NUM_TAGS, merge=True):
     ''' There are a lot of tags, so reduce it to top N popular tags
     Args : 
         filename : path to MTT annotation csv file 
@@ -122,6 +122,6 @@ def split_data(filename, base_dir, ratio=0.2):
 
 
 if __name__ == "__main__":
-    new_csvfile = reduce_to_N_tags(ANNOT_FILE, BASE_DIR)
+    new_csvfile = reduce_to_N_tags(config.ANNOT_FILE, config.BASE_DIR)
     split_data(new_csvfile, base_dir)
 

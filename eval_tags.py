@@ -1,23 +1,36 @@
 ''' Functions to evaluate the tag predictions '''
 import os
 import torch
-from torch.autograd import Variable
 import torch.nn as nn
 import pandas as pd
 import numpy as np
 import librosa
-from process_audio import get_segment_from_npy 
-from model import SampleCNN
 import argparse
-from config import *
+from audio_processor import get_segment_from_npy 
+from model import SampleCNN
+import config
+import utils
+
+
+cuda = torch.cuda.is_available()
+print("gpu available :", cuda)
+device = torch.device("cuda" if cuda else "cpu")
+num_gpu = torch.cuda.device_count()
+torch.cuda.manual_seed(5)
 
 
 parser= argparse.ArgumentParser()
-parser.add_argument('--device_num', type=int, help='WHICH GPU')
+parser.add_argument('--gpus', nargs='+', type=int, default=[])
 parser.add_argument('--mp3_file', type=str)
 args = parser.parse_args()
 print (args)
-device = torch.device("cuda:" + str(args.device_num) if torch.cuda.is_available() else "cpu")
+
+if len(args.gpus) > 1 :
+    multigpu = True
+else :
+    multigpu = False
+
+utils.handle_multigpu(multigpu, args.gpus, num_gpu)
 
 def get_taglist(csvfile):
     ''' Get the human readable ordered list of tags as saved in csv file 
@@ -53,7 +66,7 @@ def predict_topN_tags(model, base_dir, song, N=5):
     Return : 
         predicted_tags : list of N predicted tags 
     '''
-    taglist = open(LIST_OF_TAGS, 'r').read().split('\n')
+    taglist = open(config.LIST_OF_TAGS, 'r').read().split('\n')
     if len(taglist) != 50:
         print ("more than 50 tags? %d"%len(taglist), "fix..")
         for tag in taglist :
@@ -63,19 +76,19 @@ def predict_topN_tags(model, base_dir, song, N=5):
     taglist = np.array(taglist)
 
     print ("Evaluating %s"%song)
-    y, sr = librosa.load(song, sr=SR)
+    y, sr = librosa.load(song, sr=config.SR)
     print ("%d samples with %d sample rate"%(len(y), sr))
 
     # select middle 29.1secs(10 segments) and average them
     segments = []
     num_segments = 10
-    if len(y) < (NUM_SAMPLES * 10) :
-        num_segments = y//NUM_SAMPLES
+    if len(y) < (config.NUM_SAMPLES * 10) :
+        num_segments = y//config.NUM_SAMPLES
     print ("Number of segments to calculate %d"%num_segments)
 
-    start_index = len(y)//2 - (NUM_SAMPLES*10)//2
+    start_index = len(y)//2 - (config.NUM_SAMPLES*10)//2
     for i in range(num_segments):
-        segments.append(y[start_index + (i*NUM_SAMPLES) : start_index + (i+1) * NUM_SAMPLES])    
+        segments.append(y[start_index + (i*config.NUM_SAMPLES) : start_index + (i+1) * config.NUM_SAMPLES])    
     
     # predict value for each segment 
     calculated_val = []
@@ -106,11 +119,15 @@ def predict_topN_tags(model, base_dir, song, N=5):
 
 if __name__ =='__main__':
     saved_state = 'SampleCNN-singletag.pth'
-    samplecnn_model = SampleCNN(0)
-    model = load_model(samplecnn_model, saved_state).to(device)
+    samplecnn_model = SampleCNN()
+    model = load_model(samplecnn_model, saved_state)
+    if multigpu : 
+        model = torch.nn.DataParallel(model, device_ids=args.gpus)
     
+    model.to(device)
+
     # Predict top 5 tags
-    predict_topN_tags(model, BASE_DIR , args.mp3_file)
+    predict_topN_tags(model, config.BASE_DIR , args.mp3_file)
     
 
 

@@ -1,11 +1,11 @@
 import torch
-import pandas as pd
 from torch.utils.data import Dataset
-from process_audio import get_segment_from_npy 
+import pandas as pd
 import numpy as np
+from pathlib import Path
+from audio_processor import get_segment_from_npy 
+import config
 
-import warnings
-warnings.filterwarnings("ignore")
 
 '''
 Load Dataset (divided into train/validate/test sets)
@@ -14,17 +14,35 @@ Load Dataset (divided into train/validate/test sets)
 '''
 
 class SampleLevelMTTDataset(Dataset):
-    def __init__(self, csv_file, audio_dir, tag_list_file, num_tags):
+    def __init__(self):
         '''
         Args : 
             csvfile : train/val/test csvfiles
             audio_dir : directory that contains folders 0 - f
         '''
-        self.tag_list = open(tag_list_file, 'r').read().split('\n')
-        self.annotations_frame = pd.read_csv(csv_file, delimiter='\t') # df
+        self.tag_list = open(config.LIST_OF_TAGS, 'r').read().split('\n')
+        self.audio_dir = config.AUDIO_DIR
+        self.num_tags = config.NUM_TAGS
+
+
+        self.set_mode('train')
+
+
+    def set_mode(self, mode):
+        print ("dataset mode: ", mode)
+        if mode == 'train':
+            self.annotation_file = Path(config.BASE_DIR) / 'train_50_tags_annotations_final.csv'
+        
+        elif mode == 'valid':
+            self.annotation_file = Path(config.BASE_DIR) / 'valid_50_tags_annotations_final.csv'
+
+        elif mode == 'test':
+            self.annotation_file = Path(config.BASE_DIR) / 'test_50_tags_annotations_final.csv'
+
+
+        self.annotations_frame = pd.read_csv(self.annotation_file, delimiter='\t') # df
         self.labels = self.annotations_frame.drop(['clip_id', 'mp3_path'], axis=1)
-        self.audio_dir = audio_dir
-        self.num_tags = num_tags
+
 
     # get one segment (==59049 samples) and its 50-d label
     def __getitem__(self, index):

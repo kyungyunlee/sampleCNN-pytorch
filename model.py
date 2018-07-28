@@ -1,9 +1,10 @@
 import torch
 import torch.nn as nn
+import config
 
 
 class SampleCNN(nn.Module):
-    def __init__(self, dropout_rate):
+    def __init__(self):
         super(SampleCNN, self).__init__()
 
         # 59049 x 1
@@ -41,7 +42,7 @@ class SampleCNN(nn.Module):
             nn.BatchNorm1d(256),
             nn.ReLU(),
             nn.MaxPool1d(3,stride=3),
-            nn.Dropout(dropout_rate))
+            nn.Dropout(config.DROPOUT))
         # 81 x 256
         self.conv7 = nn.Sequential(
             nn.Conv1d(256, 256, kernel_size=3, stride=1, padding=1),
@@ -71,7 +72,7 @@ class SampleCNN(nn.Module):
             nn.Conv1d(512, 512, kernel_size=3, stride=1, padding=1),
             nn.BatchNorm1d(512),
             nn.ReLU(),
-            nn.Dropout(dropout_rate))
+            nn.Dropout(config.DROPOUT))
         # 1 x 512 
         self.fc = nn.Linear(512, 50)
         self.activation = nn.Sigmoid()

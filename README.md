@@ -6,23 +6,21 @@ Pytorch implementation of [Sample-level Deep Convolutional Neural Networks for M
 * Used tag annotations and audio data
 
 ### Model
-3^9 model with input sample size 59049  
-3 : stride length of the first conv layer (along with filter size 3, it reduces input dimension to 19683)  
-9 : 9 hidden conv layers  
+9 1D conv layers and input sample size of 59049 (~3 seconds) 
 
 ### Procedures
+* Fix `config.py` file
 * Data processing
-    * audio (to read audio signal from mp3s and save as npy) : ` python process_audio.py `
-    * annotation (process redundant tags and select top N=50 tags): ` python process_annotations.py `
+    * run ` python audio_processor.py ` :  audio (to read audio signal from mp3s and save as npy) 
+    * run ` python annot_processor.py ` :  annotation (process redundant tags and select top N=50 tags)
 		* this will create and save train/valid/test annotation files 
 * Training
-    * ` python main.py --device_num 0 `
-* Testing 
-	* predict tags for given songs
-    * ` python evaluate.py --device_num 0 `
+	* You can set multigpu option by listing all the available devices
+    * Ex. ` python main.py --gpus 0 1`
+	* Ex. ` python main.py ` will use 1 gpu if available as a default 
 
 ### Tag prediction
-* `python eval_tags.py --device_num 0 --mp3_file "path/to/mp3file/to/predict.mp3" ` 
+* run `python eval_tags.py --gpus 0 1 --mp3_file "path/to/mp3file/to/predict.mp3" ` 
 
 ### References
 * [https://github.com/jongpillee/sampleCNN](https://github.com/jongpillee/sampleCNN)
