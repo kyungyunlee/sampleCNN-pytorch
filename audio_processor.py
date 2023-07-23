@@ -29,18 +29,18 @@ def save_audio_to_npy(rawfilepath, npyfilepath):
         except OSError as e:
             if e.errno != errno.EEXIST:
                 raise
-        audios = [audio for audio in os.listdir(Path(rawfilepath) / path) if audio.split(".")[-1] == 'mp3']
-        for audio in audios :
+        audios = [audio for audio in os.listdir(rawfilepath) if audio.split(".")[-1] == 'mp3'] 
+    for audio in audios :
             try:
-                y,sr = librosa.load(audio, sr=config.SR)
-                if len(y)/self.NUM_SAMPLES < 10:
+                y,sr = librosa.load(str(Path(rawfilepath)/audio), sr=config.SR)
+                if len(y)/config.NUM_SAMPLES < 10: #요 부분도 수정이 필요함. config.NUM_SAMPLES < 10 으로 고쳐두었습니다.
                     print ("There are less than 10 segments in this audio")
             except:
                 print ("Cannot load audio {}".format(audio))
                 continue
 
             fn = audio.split(".")[0]
-            np.save(Path(npyfilepath) / (path + '/' + fn + '.npy'), y)
+            np.save((Path(npyfilepath) / f'{fn}.npy'), y)
 
 
 def get_segment_from_npy(npyfile, segment_idx):
@@ -66,4 +66,3 @@ if __name__ =='__main__':
     # read audio signal and save to npy format 
     save_audio_to_npy(config.MTT_DIR, config.AUDIO_DIR)
     
-
